@@ -1,0 +1,235 @@
+#include<iostream>
+using namespace std;
+
+struct GroceryItem {
+    string name;
+    int quantity;
+    double price;
+    double totalprice;
+    GroceryItem* next;
+
+    GroceryItem(const string& n, int q, double p)
+        : name(n), quantity(q), price(p), next(NULL) {
+        totalprice = q * p;
+    }
+};
+
+struct Month {
+    string monthName;
+    GroceryItem* itemHead;
+    Month* next;
+
+    Month(const string& name) : monthName(name), itemHead(NULL), next(NULL) {}
+};
+
+class ExpenseTracker {
+private:
+    Month* monthHead;
+
+public:
+    ExpenseTracker() : monthHead(NULL) {}
+
+    // Add new month if it doesn't exist
+    Month* addOrGetMonth(const string& monthName) {
+        Month* temp = monthHead;
+
+        while (temp) {
+            if (temp->monthName == monthName)
+                return temp;
+            temp = temp->next;
+        }
+
+        // Month not found, create new
+        Month* newMonth = new Month(monthName);
+        newMonth->next = monthHead;
+        monthHead = newMonth;
+        return newMonth;
+    }
+
+    // Add item to a specific month
+    void addItem(const string& monthName, const string& itemName, int quantity, double price) {
+        Month* month = addOrGetMonth(monthName);
+
+        GroceryItem* newItem = new GroceryItem(itemName, quantity, price);
+        newItem->next = month->itemHead;
+        month->itemHead = newItem;
+    }
+
+    // Display all months and items
+    void displayAll() const {
+        Month* mTemp = monthHead;
+        while (mTemp) {
+            cout << "\n--- " << mTemp->monthName << " ---\n";
+            GroceryItem* gTemp = mTemp->itemHead;
+            while (gTemp) {
+                cout << gTemp->name << " | Qty: " << gTemp->quantity
+                     << " | Price: Rs." << gTemp->price
+                     << " | Total: Rs." << gTemp->totalprice << endl;
+                gTemp = gTemp->next;
+            }
+            mTemp = mTemp->next;
+        }
+    }
+
+    // Find most expensive item in a given month
+    void findMostExpensiveItemInMonth(const string& monthName) const {
+        Month* month = monthHead;
+        while (month) {
+            if (month->monthName == monthName) {
+                GroceryItem* maxItem = NULL;
+                double maxPrice = 0.0;
+                GroceryItem* temp = month->itemHead;
+
+                while (temp) {
+                    if (temp->totalprice > maxPrice) {
+                        maxPrice = temp->totalprice;
+                        maxItem = temp;
+                    }
+                    temp = temp->next;
+                }
+
+                if (maxItem) {
+                    cout << "\nMost Expensive Item in " << monthName << ": "
+                         << maxItem->name << " | Qty: " << maxItem->quantity
+                         << " | Price: Rs." << maxItem->price
+                         << " | Total: Rs." << maxItem->totalprice << endl;
+                } else {
+                    cout << "No items found in " << monthName << "." << endl;
+                }
+                return;
+            }
+            month = month->next;
+        }
+        cout << "Month '" << monthName << "' not found.\n";
+    }
+
+    // Update an item in a month
+    bool updateItem(const string& monthName, const string& itemName, int newQty, double newPrice) {
+        Month* month = monthHead;
+        while (month) {
+            if (month->monthName == monthName) {
+                GroceryItem* item = month->itemHead;
+                while (item) {
+                    if (item->name == itemName) {
+                        item->quantity = newQty;
+                        item->price = newPrice;
+                        item->totalprice = newQty * newPrice;
+                        return true;
+                    }
+                    item = item->next;
+                }
+            }
+            month = month->next;
+        }
+        return false;
+    }
+
+    // Delete item from a month
+    bool deleteItem(const string& monthName, const string& itemName) {
+        Month* month = monthHead;
+        while (month) {
+            if (month->monthName == monthName) {
+                GroceryItem* curr = month->itemHead;
+                GroceryItem* prev = NULL;
+
+                while (curr) {
+                    if (curr->name == itemName) {
+                        if (prev)
+                            prev->next = curr->next;
+                        else
+                            month->itemHead = curr->next;
+                        delete curr;
+                        return true;
+                    }
+                    prev = curr;
+                    curr = curr->next;
+                }
+            }
+            month = month->next;
+        }
+        return false;
+    }
+
+    // Destructor
+    ~ExpenseTracker() {
+        while (monthHead) {
+            GroceryItem* item = monthHead->itemHead;
+            while (item) {
+                GroceryItem* tmp = item;
+                item = item->next;
+                delete tmp;
+            }
+            Month* tmpMonth = monthHead;
+            monthHead = monthHead->next;
+            delete tmpMonth;
+        }
+    }
+};
+
+int main() {
+    ExpenseTracker tracker;
+    int c,q,p;
+    string m,n;
+    jump:
+cout<<"Press 1 to additem"<<endl;
+cout<<"Press 2 to display item"<<endl;
+cout<<"Press 3 to find most expensive item"<<endl;
+cout<<"Press 4 to update item"<<endl;
+cout<<"Press 5 to delete item"<<endl;
+cout<<"Press 6 to exit program"<<endl;
+cin>>c;
+switch(c){
+	case 1:{
+		cout<<"enter month"<<endl;
+		cin>>m;
+			cout<<"enter item"<<endl;
+		cin>>n;
+			cout<<"enter quantity"<<endl;
+		cin>>q;
+			cout<<"enter price"<<endl;
+		cin>>p;
+		 tracker.addItem(m,n,q,p);
+		goto jump;
+	}
+		case 2:{
+			 tracker.displayAll();
+			goto jump;
+		}
+		case 3:{
+				cout<<"enter month"<<endl;
+		cin>>m;
+			  tracker.findMostExpensiveItemInMonth(m);
+		goto jump;
+		}
+			case 4:{
+					cout<<"enter month for updation"<<endl;
+		cin>>m;
+			cout<<"enter  updated item"<<endl;
+		cin>>n;
+			cout<<"enter updated quantity"<<endl;
+		cin>>q;
+			cout<<"enter updated price"<<endl;
+		cin>>p;
+    if (tracker.updateItem(m,n,q,p))
+        cout << "Updated successfully.\n";
+    else
+        cout << "Item not found.\n";		
+				goto jump;
+			}
+			case 5:{
+	cout<<"enter month"<<endl;
+		cin>>m;
+			cout<<"enter item"<<endl;
+		cin>>n;
+    if (tracker.deleteItem(m,n))
+        cout << "Deleted successfully.\n";
+    else
+        cout << "Item not found.\n";				
+				goto jump;
+			}
+		case 6:{
+        break;
+		}
+}
+    return 0;
+}
